@@ -14,10 +14,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains import create_retrieval_chain
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
 load_dotenv()
+
+# CONFIGURATION
 
 DOCUMENT_NAME = "Indian Corporate Law"
 PERSIST_DIR = "vectorstore1000"
@@ -101,8 +100,6 @@ def load_retriever():
 
 @st.cache_resource
 def load_chain():
-    # IMPORTANT:
-    # Do not use temperature=0 with GPT-5 models.
     llm = ChatOpenAI(model=MODEL_NAME, temperature = 0.5)
 
     prompt = ChatPromptTemplate.from_template(
@@ -368,9 +365,8 @@ The scores must be numbers between 0 and 1.
             "reason": f"Evaluation failed: {str(e)}"
         }
 
-# ============================================================
 # SOURCE RENDERING
-# ============================================================
+
 def render_sources(sources):
     with st.expander("📚 Show sources used for this answer"):
         for i, doc in enumerate(sources, 1):
@@ -395,9 +391,8 @@ def render_sources(sources):
                 + ("..." if len(doc.page_content) > 500 else "")
             )
 
-# ============================================================
 # EVALUATION DASHBOARD
-# ============================================================
+
 def render_evaluation_dashboard():
     st.header("📊 Live RAG Evaluation")
 
@@ -412,9 +407,8 @@ def render_evaluation_dashboard():
 
     df = pd.DataFrame(evaluations)
 
-    # --------------------------------------------------------
     # SUMMARY
-    # --------------------------------------------------------
+
     avg_faithfulness = df["faithfulness"].mean()
     avg_answer_relevance = df["answer_relevance"].mean()
     avg_context_relevance = df["context_relevance"].mean()
@@ -450,9 +444,9 @@ def render_evaluation_dashboard():
 
     st.divider()
 
-    # --------------------------------------------------------
+
     # SCORE INTERPRETATION
-    # --------------------------------------------------------
+
     st.subheader("Score Interpretation")
 
     st.markdown(
@@ -489,9 +483,9 @@ def render_evaluation_dashboard():
 
     st.divider()
 
-    # --------------------------------------------------------
+
     # DETAILED RESULTS
-    # --------------------------------------------------------
+
     st.subheader("🔎 Detailed Evaluations")
 
     for i, row in df.iloc[::-1].iterrows():
@@ -537,9 +531,9 @@ def render_evaluation_dashboard():
 
     st.divider()
 
-    # --------------------------------------------------------
+
     # DOWNLOAD RESULTS
-    # --------------------------------------------------------
+
     st.subheader("⬇️ Export Evaluation")
 
     csv_df = df.copy()
@@ -555,9 +549,9 @@ def render_evaluation_dashboard():
         mime="text/csv"
     )
 
-# ============================================================
+
 # SIDEBAR
-# ============================================================
+
 with st.sidebar:
     st.header("⚙️ RAG Configuration")
 
@@ -589,9 +583,9 @@ with st.sidebar:
         st.session_state.query_count = 0
         st.rerun()
 
-# ============================================================
+
 # MAIN INTERFACE
-# ============================================================
+
 chat_tab, evaluation_tab = st.tabs(
     [
         "💬 Chat",
@@ -599,9 +593,8 @@ chat_tab, evaluation_tab = st.tabs(
     ]
 )
 
-# ============================================================
 # CHAT TAB
-# ============================================================
+
 with chat_tab:
     # Render previous conversation
     for role, content, sources in st.session_state.history:
@@ -629,9 +622,9 @@ with chat_tab:
 
         st.session_state.query_count += 1
 
-        # ----------------------------------------------------
+
         # USER MESSAGE
-        # ----------------------------------------------------
+
         st.session_state.history.append(
             (
                 "user",
@@ -643,9 +636,9 @@ with chat_tab:
         with st.chat_message("user"):
             st.markdown(query)
 
-        # ----------------------------------------------------
+
         # RAG RESPONSE
-        # ----------------------------------------------------
+        
         with st.chat_message("assistant"):
             with st.spinner(
                 "Retrieving documents and generating answer..."
@@ -682,9 +675,8 @@ with chat_tab:
                     )
                     st.stop()
 
-        # ----------------------------------------------------
         # LIVE EVALUATION
-        # ----------------------------------------------------
+        
         with st.spinner("Evaluating answer..."):
 
             evaluation_start = time.perf_counter()
@@ -696,9 +688,9 @@ with chat_tab:
             )
 
             evaluation_time = time.perf_counter() - evaluation_start
-        # ----------------------------------------------------
+   
         # SAVE EVALUATION
-        # ----------------------------------------------------
+        
         evaluation_record = {
             "timestamp": datetime.now().strftime(
                 "%Y-%m-%d %H:%M:%S"
@@ -728,9 +720,9 @@ with chat_tab:
             evaluation_record
         )
 
-        # ----------------------------------------------------
+       
         # SHOW LIVE SCORE
-        # ----------------------------------------------------
+    
         st.success(
             "✅ Answer evaluated"
         )
@@ -772,9 +764,9 @@ with chat_tab:
                 evaluation["reason"]
             )
 
-        # ----------------------------------------------------
+        
         # SAVE ASSISTANT MESSAGE
-        # ----------------------------------------------------
+        
         st.session_state.history.append(
             (
                 "assistant",
@@ -783,8 +775,8 @@ with chat_tab:
             )
         )
 
-# ============================================================
+
 # EVALUATION TAB
-# ============================================================
+
 with evaluation_tab:
     render_evaluation_dashboard()
